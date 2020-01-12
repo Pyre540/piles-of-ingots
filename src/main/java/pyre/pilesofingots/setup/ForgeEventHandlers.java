@@ -1,5 +1,6 @@
 package pyre.pilesofingots.setup;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
 import net.minecraft.item.BlockItemUseContext;
@@ -16,6 +17,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import pyre.pilesofingots.block.PileOfIngotsBlock;
 import pyre.pilesofingots.block.PileOfIngotsTileEntity;
 
 public class ForgeEventHandlers {
@@ -27,9 +29,13 @@ public class ForgeEventHandlers {
         if (world.isRemote || heldStack.isEmpty()) {
             return;
         }
+        BlockPos pos = event.getPos();
+        Block block = world.getBlockState(pos).getBlock();
+        if (block instanceof PileOfIngotsBlock && !((PileOfIngotsBlock) block).isPileFull(world, pos)) {
+            return;
+        }
         Tag<Item> itemTag = ItemTags.getCollection().get(new ResourceLocation("forge", "ingots"));
         if (itemTag != null && itemTag.contains(heldStack.getItem())) {
-            BlockPos pos = event.getPos();
             boolean replaceable = world.getBlockState(pos).isReplaceable(new CustomBlockItemUseContext(event));
             if (!replaceable) {
                 pos = pos.offset(event.getFace());

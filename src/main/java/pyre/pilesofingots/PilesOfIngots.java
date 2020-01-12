@@ -23,11 +23,4 @@ public class PilesOfIngots {
     private void setup(final FMLCommonSetupEvent event) {
         setup.init();
     }
-
-    /*@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static class RegistryEvents {
-        @SubscribeEvent
-        public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
-        }
-    }*/
 }
