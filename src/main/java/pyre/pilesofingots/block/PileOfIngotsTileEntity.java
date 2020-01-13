@@ -23,7 +23,7 @@ public class PileOfIngotsTileEntity extends TileEntity {
     public static final ModelProperty<Integer> INGOT_COUNT = new ModelProperty<>();
 
     private ItemStack ingot;
-    private int ingotCount = 0;
+    private int ingotCount = 1;
 
     public PileOfIngotsTileEntity() {
         super(TYPE_PILE_OF_INGOTS.get());

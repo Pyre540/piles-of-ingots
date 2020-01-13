@@ -27,7 +27,15 @@ import javax.annotation.Nullable;
 
 public class PileOfIngotsBlock extends Block {
 
-    private final VoxelShape shape = VoxelShapes.create(0, 0, 0, 1, .125, 1);
+    private final VoxelShape shape1Layer = VoxelShapes.create(0, 0, 0, 1, .125, 1);
+    private final VoxelShape shape2Layers = VoxelShapes.create(0, 0, 0, 1, .25, 1);
+    private final VoxelShape shape3Layers = VoxelShapes.create(0, 0, 0, 1, .375, 1);
+    private final VoxelShape shape4Layers = VoxelShapes.create(0, 0, 0, 1, .5, 1);
+    private final VoxelShape shape5Layers = VoxelShapes.create(0, 0, 0, 1, .625, 1);
+    private final VoxelShape shape6Layers = VoxelShapes.create(0, 0, 0, 1, .75, 1);
+    private final VoxelShape shape7Layers = VoxelShapes.create(0, 0, 0, 1, .8755, 1);
+    private final VoxelShape shape8Layers = VoxelShapes.create(0, 0, 0, 1, 1, 1);
+    private final VoxelShape[] shapes = {shape1Layer, shape2Layers, shape3Layers, shape4Layers, shape5Layers, shape6Layers, shape7Layers, shape8Layers};
 
     public PileOfIngotsBlock() {
         super(Properties.create(Material.IRON)
@@ -61,7 +69,16 @@ public class PileOfIngotsBlock extends Block {
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader reader, BlockPos pos, ISelectionContext context) {
-        return shape;
+        PileOfIngotsTileEntity te = getTE(reader, pos);
+        if (te != null) {
+            int ingotCount = te.getIngotCount();
+            int index = ingotCount / 8;
+            if (ingotCount % 8 == 0) {
+                index--;
+            }
+            return shapes[index];
+        }
+        return shape1Layer;
     }
 
     @Override
@@ -77,32 +94,37 @@ public class PileOfIngotsBlock extends Block {
 
     @Override
     public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (worldIn.isRemote) {
+        if (handIn == Hand.OFF_HAND) {
             return false;
         }
         PileOfIngotsTileEntity te = getTE(worldIn, pos);
-        if (player.isSneaking() && handIn == Hand.MAIN_HAND) {
-            if (te == null) {
-                return true;
-            }
-            int ingotCount = te.getIngotCount();
-            if (ingotCount > 0) {
+        if (player.isSneaking()) {
+            return removeIngot(worldIn, pos, player, te);
+        }
+        return addIngot(state, worldIn, pos, player, handIn, te);
+    }
+
+    private boolean removeIngot(World worldIn, BlockPos pos, PlayerEntity player, PileOfIngotsTileEntity te) {
+        if (te == null) {
+            return false;
+        }
+        int ingotCount = te.getIngotCount();
+        if (ingotCount > 0) {
+            if (!worldIn.isRemote) {
                 te.setIngotCount(te.getIngotCount() - 1);
-                ItemHandlerHelper.giveItemToPlayer(player, new ItemStack(te.getIngot().getItem()));
+                ItemHandlerHelper.giveItemToPlayer(player, te.getIngot().copy());
                 if (te.getIngotCount() == 0) {
                     worldIn.removeBlock(pos, false);
                 }
-                return true;
             }
-            return false;
+            return true;
         }
-
-        return addIngot(state, worldIn, pos, player, handIn, te);
+        return false;
     }
 
     private boolean addIngot(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, PileOfIngotsTileEntity te) {
         if (te == null || isPileFull(te)) {
-            return true;
+            return false;
         }
         ItemStack heldStack = player.getHeldItem(handIn);
         Tag<Item> itemTag = ItemTags.getCollection().get(new ResourceLocation("forge", "ingots"));
@@ -110,19 +132,23 @@ public class PileOfIngotsBlock extends Block {
             boolean sameIngotType = te.getIngot().getItem().getTags().stream()
                     .anyMatch(r -> r.getPath().startsWith("ingots/") && heldStack.getItem().getTags().contains(r));
             if (sameIngotType) {
-                te.setIngotCount(te.getIngotCount() + 1);
-                SoundType soundType = getSoundType(state, worldIn, pos, player);
-                worldIn.playSound(null, pos, soundType.getPlaceSound(), SoundCategory.BLOCKS, 1.0F,
-                        soundType.getPitch() * 0.8F);
-                heldStack.shrink(1);
-                player.setHeldItem(handIn, heldStack);
+                if (!worldIn.isRemote) {
+                    te.setIngotCount(te.getIngotCount() + 1);
+                    SoundType soundType = getSoundType(state, worldIn, pos, player);
+                    worldIn.playSound(null, pos, soundType.getPlaceSound(), SoundCategory.BLOCKS, 1.0F,
+                            soundType.getPitch() * 0.8F);
+                    if (!player.isCreative()) {
+                        heldStack.shrink(1);
+                        player.setHeldItem(handIn, heldStack);
+                    }
+                }
                 return true;
             }
         }
         return false;
     }
 
-    private PileOfIngotsTileEntity getTE(World world, BlockPos pos) {
+    private PileOfIngotsTileEntity getTE(IBlockReader world, BlockPos pos) {
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof PileOfIngotsTileEntity) {
             return (PileOfIngotsTileEntity) te;
