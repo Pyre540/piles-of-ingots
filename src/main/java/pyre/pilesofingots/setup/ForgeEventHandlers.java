@@ -63,6 +63,7 @@ public class ForgeEventHandlers {
         if (!player.isSneaking() && block instanceof PileOfIngotsBlock && !((PileOfIngotsBlock) block).isPileFull(world, pos)) {
             state.onBlockActivated(world, player, hand,
                     new BlockRayTraceResult(new Vec3d(0.5, 0.5, 0.5), event.getFace(), pos, false));
+            player.swingArm(hand);
         }
     }
 
@@ -75,7 +76,6 @@ public class ForgeEventHandlers {
                 ItemStack heldStackCopy = heldStack.copy();
                 heldStackCopy.setCount(1);
                 ((PileOfIngotsTileEntity) te).setIngot(heldStackCopy);
-                ((PileOfIngotsTileEntity) te).setIngotCount(1);
             }
             SoundType soundType = stateForPlacement.getSoundType(world, pos, player);
             world.playSound(null, pos, soundType.getPlaceSound(), SoundCategory.BLOCKS, 1.0F,
