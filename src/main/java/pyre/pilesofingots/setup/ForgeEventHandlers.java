@@ -80,8 +80,10 @@ public class ForgeEventHandlers {
             SoundType soundType = stateForPlacement.getSoundType(world, pos, player);
             world.playSound(null, pos, soundType.getPlaceSound(), SoundCategory.BLOCKS, 1.0F,
                     soundType.getPitch() * 0.8F);
-            heldStack.shrink(1);
-            player.setHeldItem(hand, heldStack);
+            if (!player.isCreative()) {
+                heldStack.shrink(1);
+                player.setHeldItem(hand, heldStack);
+            }
         }
         player.swingArm(hand);
     }

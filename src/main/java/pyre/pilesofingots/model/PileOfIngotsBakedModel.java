@@ -9,11 +9,12 @@ import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IDynamicBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import pyre.pilesofingots.block.PileOfIngotsTileEntity;
-import pyre.pilesofingots.util.IngotColorHelper;
+import pyre.pilesofingots.util.IngotModelHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,15 +27,24 @@ import static pyre.pilesofingots.PilesOfIngots.MODID;
 
 public class PileOfIngotsBakedModel implements IDynamicBakedModel {
 
+    private final String nameIngots = MODID + ":block/pile_of_ingots";
+    private final String nameBricks = MODID + ":block/pile_of_bricks";
+
     private final VertexFormat format;
+    private final TextureAtlasSprite textureIngots;
+    private final TextureAtlasSprite textureBricks;
 
     public PileOfIngotsBakedModel(VertexFormat format) {
         this.format = format;
+        textureIngots = Minecraft.getInstance().getTextureMap().getAtlasSprite(nameIngots);
+        textureBricks = Minecraft.getInstance().getTextureMap().getAtlasSprite(nameBricks);
     }
 
-    private TextureAtlasSprite getTexture() {
-        String name = MODID + ":block/pile_of_ingots";
-        return Minecraft.getInstance().getTextureMap().getAtlasSprite(name);
+    private TextureAtlasSprite getTexture(ItemStack item) {
+        if (item.getItem().getTags().stream().anyMatch(i -> i.getPath().contains("ingots") && i.getPath().endsWith("brick"))) {
+            return textureBricks;
+        }
+        return textureIngots;
     }
 
     private void putVertex(UnpackedBakedQuad.Builder builder, Vec3d normal,
@@ -65,7 +75,7 @@ public class PileOfIngotsBakedModel implements IDynamicBakedModel {
     }
 
     private BakedQuad createQuad(Vec3d v1, Vec3d v2, Vec3d v3, Vec3d v4, TextureAtlasSprite sprite,
-                                 IngotColorHelper.Color color) {
+                                 IngotModelHelper.Color color) {
         Vec3d normal = v3.subtract(v2).crossProduct(v1.subtract(v2)).normalize();
 
         UnpackedBakedQuad.Builder builder = new UnpackedBakedQuad.Builder(format);
@@ -100,13 +110,12 @@ public class PileOfIngotsBakedModel implements IDynamicBakedModel {
             boolean rotated = (n / 8) % 2 != 0;
             quads.addAll(createIngotQuads(ingot, offsetX, offsetY, offsetZ, rotated));
         }
-
         return quads;
     }
 
     private List<BakedQuad> createIngotQuads(ItemStack ingot, double offsetX, double offsetY, double offsetZ, boolean rotated) {
-        IngotColorHelper.Color color = IngotColorHelper.getColorForIngot(ingot.getItem());
-        TextureAtlasSprite texture = getTexture();
+        IngotModelHelper.Color color = IngotModelHelper.getAverageColor(ingot.getItem());
+        TextureAtlasSprite texture = getTexture(ingot);
         List<BakedQuad> quads = new ArrayList<>();
         Vec3d a1, a2, b1, b2, c1, c2, d1, d2;
 
@@ -156,7 +165,16 @@ public class PileOfIngotsBakedModel implements IDynamicBakedModel {
 
     @Override
     public TextureAtlasSprite getParticleTexture() {
-        return getTexture();
+        return getParticleTexture(EmptyModelData.INSTANCE);
+    }
+
+    @Override
+    public TextureAtlasSprite getParticleTexture(@Nonnull IModelData data) {
+        ItemStack ingot = data.getData(PileOfIngotsTileEntity.INGOT);
+        if (ingot == null) {
+            return textureIngots;
+        }
+        return IngotModelHelper.getIngotTexture(ingot.getItem());
     }
 
     @Override

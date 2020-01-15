@@ -20,6 +20,7 @@ public class ClientRegistration {
             return;
         }
         event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/pile_of_ingots"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/pile_of_bricks"));
     }
 
     @SubscribeEvent
