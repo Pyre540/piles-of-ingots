@@ -25,7 +25,13 @@ public class ClientRegistration {
 
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
-        event.getModelRegistry().put(new ModelResourceLocation(ModSetup.PILE_OF_INGOTS.get().getRegistryName(), ""),
-                new PileOfIngotsBakedModel(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL)); //BLOCK
+        event.getModelRegistry().put(new ModelResourceLocation(ModSetup.PILE_OF_INGOTS.get().getRegistryName(), "facing=north"),
+                new PileOfIngotsBakedModel(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL));
+        event.getModelRegistry().put(new ModelResourceLocation(ModSetup.PILE_OF_INGOTS.get().getRegistryName(), "facing=south"),
+                new PileOfIngotsBakedModel(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL));
+        event.getModelRegistry().put(new ModelResourceLocation(ModSetup.PILE_OF_INGOTS.get().getRegistryName(), "facing=west"),
+                new PileOfIngotsBakedModel(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL));
+        event.getModelRegistry().put(new ModelResourceLocation(ModSetup.PILE_OF_INGOTS.get().getRegistryName(), "facing=east"),
+                new PileOfIngotsBakedModel(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL));
     }
 }

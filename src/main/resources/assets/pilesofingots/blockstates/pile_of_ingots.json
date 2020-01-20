@@ -1,5 +1,7 @@
 {
+  "forge_marker": 1,
+  "defaults": { "model": "pilesofingots:block/pile_of_ingots" },
   "variants": {
-    "": { "model":  "pilesofingots:block/pile_of_ingot"}
+    "": { "model": "pilesofingots:block/pile_of_ingots" }
   }
 }

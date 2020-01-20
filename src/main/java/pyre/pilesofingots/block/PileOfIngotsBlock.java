@@ -2,17 +2,19 @@ package pyre.pilesofingots.block;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
@@ -37,12 +39,15 @@ public class PileOfIngotsBlock extends Block {
     private final VoxelShape shape8Layers = VoxelShapes.create(0, 0, 0, 1, 1, 1);
     private final VoxelShape[] shapes = {shape1Layer, shape2Layers, shape3Layers, shape4Layers, shape5Layers, shape6Layers, shape7Layers, shape8Layers};
 
+    public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+
     public PileOfIngotsBlock() {
         super(Properties.create(Material.IRON)
                 .sound(SoundType.METAL)
                 .hardnessAndResistance(3.0F, 10.0F)
                 .harvestLevel(0)
                 .harvestTool(ToolType.PICKAXE));
+        this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
     }
 
     public boolean isPileFull(World world, BlockPos pos) {
@@ -93,6 +98,18 @@ public class PileOfIngotsBlock extends Block {
     }
 
     @Override
+    public BlockState getStateForPlacement(BlockItemUseContext context) {
+        return getStateForPlacement(context.getPlacementHorizontalFacing());
+    }
+
+    public BlockState getStateForPlacement(Direction direction) {
+        if (Direction.Plane.HORIZONTAL.test(direction)) {
+            return this.getDefaultState().with(FACING, direction.getOpposite());
+        }
+        return this.getDefaultState();
+    }
+
+    @Override
     public boolean onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (handIn == Hand.OFF_HAND) {
             return false;
@@ -102,6 +119,21 @@ public class PileOfIngotsBlock extends Block {
             return removeIngot(worldIn, pos, player, te);
         }
         return addIngot(state, worldIn, pos, player, handIn, te);
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, Rotation rot) {
+        return state.with(FACING, rot.rotate(state.get(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirrorIn) {
+        return state.rotate(mirrorIn.toRotation(state.get(FACING)));
+    }
+
+    @Override
+    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
     }
 
     private boolean removeIngot(World worldIn, BlockPos pos, PlayerEntity player, PileOfIngotsTileEntity te) {
@@ -139,7 +171,6 @@ public class PileOfIngotsBlock extends Block {
                             soundType.getPitch() * 0.8F);
                     if (!player.isCreative()) {
                         heldStack.shrink(1);
-                        player.setHeldItem(handIn, heldStack);
                     }
                 }
                 return true;

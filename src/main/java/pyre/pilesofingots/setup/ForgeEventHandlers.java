@@ -69,7 +69,7 @@ public class ForgeEventHandlers {
 
     private void createPile(World world, PlayerEntity player, Hand hand, ItemStack heldStack, BlockPos pos) {
         if (!world.isRemote) {
-            BlockState stateForPlacement = ModSetup.PILE_OF_INGOTS.get().getDefaultState();
+            BlockState stateForPlacement = ModSetup.PILE_OF_INGOTS.get().getStateForPlacement(player.getHorizontalFacing());
             world.setBlockState(pos, stateForPlacement);
             TileEntity te = world.getTileEntity(pos);
             if (te instanceof PileOfIngotsTileEntity) {
@@ -82,7 +82,6 @@ public class ForgeEventHandlers {
                     soundType.getPitch() * 0.8F);
             if (!player.isCreative()) {
                 heldStack.shrink(1);
-                player.setHeldItem(hand, heldStack);
             }
         }
         player.swingArm(hand);

@@ -13,6 +13,7 @@ import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IDynamicBakedModel;
 import net.minecraftforge.client.model.data.IModelData;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
+import pyre.pilesofingots.block.PileOfIngotsBlock;
 import pyre.pilesofingots.block.PileOfIngotsTileEntity;
 import pyre.pilesofingots.util.IngotModelHelper;
 
@@ -94,30 +95,30 @@ public class PileOfIngotsBakedModel implements IDynamicBakedModel {
     @Nonnull
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @Nonnull Random rand, @Nonnull IModelData extraData) {
-        if (side != null) {
-            return Collections.emptyList();
-        }
-
         ItemStack ingot = extraData.getData(PileOfIngotsTileEntity.INGOT);
-        if (ingot == null) {
+        Integer ingotCount = extraData.getData(PileOfIngotsTileEntity.INGOT_COUNT);
+        if (side != null || ingot == null || state == null || ingotCount == null || ingotCount == 0) {
             return Collections.emptyList();
         }
+        Direction direction = state.get(PileOfIngotsBlock.FACING);
+
         List<BakedQuad> quads = new ArrayList<>();
-        for (int n = 0; n < extraData.getData(PileOfIngotsTileEntity.INGOT_COUNT); n++) {
+        for (int n = 0; n < ingotCount; n++) {
             float offsetX = (n % 4) * 0.25F;
             float offsetY = (n / 8) * 0.125F;
             float offsetZ = (n % 8) < 4 ? 0 : 0.5F;
             boolean rotated = (n / 8) % 2 != 0;
-            quads.addAll(createIngotQuads(ingot, offsetX, offsetY, offsetZ, rotated));
+            quads.addAll(createIngotQuads(ingot, offsetX, offsetY, offsetZ, rotated, direction));
         }
         return quads;
     }
 
-    private List<BakedQuad> createIngotQuads(ItemStack ingot, double offsetX, double offsetY, double offsetZ, boolean rotated) {
+    private List<BakedQuad> createIngotQuads(ItemStack ingot, double offsetX, double offsetY, double offsetZ, boolean rotated, Direction direction) {
         IngotModelHelper.Color color = IngotModelHelper.getAverageColor(ingot.getItem());
         TextureAtlasSprite texture = getTexture(ingot);
         List<BakedQuad> quads = new ArrayList<>();
         Vec3d a1, a2, b1, b2, c1, c2, d1, d2;
+        double r = getRotation(direction);
 
         if (rotated) {
             a1 = v(0.015625 + offsetZ, 0 + offsetY, 0.234375 + offsetX);
@@ -139,13 +140,36 @@ public class PileOfIngotsBakedModel implements IDynamicBakedModel {
             d2 = v(0.1875 + offsetX, 0.125 + offsetY, 0.0625 + offsetZ);
         }
 
-        quads.add(createQuad(b1, a1, c1, d1, texture, color)); //bottom
-        quads.add(createQuad(a2, b2, d2, c2, texture, color)); //top
-        quads.add(createQuad(a1, a2, c2, c1, texture, color)); //long1
-        quads.add(createQuad(d1, d2, b2, b1, texture, color)); //long2
-        quads.add(createQuad(a2, a1, b1, b2, texture, color)); //short1
-        quads.add(createQuad(c1, c2, d2, d1, texture, color)); //short2
+        quads.add(createQuad(rotate(b1, r), rotate(a1, r), rotate(c1, r), rotate(d1, r), texture, color)); //bottom
+        quads.add(createQuad(rotate(a2, r), rotate(b2, r), rotate(d2, r), rotate(c2, r), texture, color)); //top
+        quads.add(createQuad(rotate(a1, r), rotate(a2, r), rotate(c2, r), rotate(c1, r), texture, color)); //long1
+        quads.add(createQuad(rotate(d1, r), rotate(d2, r), rotate(b2, r), rotate(b1, r), texture, color)); //long2
+        quads.add(createQuad(rotate(a2, r), rotate(a1, r), rotate(b1, r), rotate(b2, r), texture, color)); //short1
+        quads.add(createQuad(rotate(c1, r), rotate(c2, r), rotate(d2, r), rotate(d1, r), texture, color)); //short2
         return quads;
+    }
+
+    private Vec3d rotate(Vec3d v, double angle) {
+        double sin = Math.sin(Math.toRadians(angle));
+        double cos = Math.cos(Math.toRadians(angle));
+
+        //point (0.5, 0.5)
+        double newX = (v.x - 0.5) * cos - (v.z - 0.5) * sin + 0.5;
+        double newZ = (v.x - 0.5) * sin + (v.z - 0.5) * cos + 0.5;
+        return new Vec3d(newX, v.y, newZ);
+    }
+
+    private double getRotation(Direction direction) {
+        switch (direction) {
+            case EAST:
+                return 270;
+            case SOUTH:
+                return 0;
+            case WEST:
+                return 90;
+            default:
+                return 180;
+        }
     }
 
     @Override
