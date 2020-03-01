@@ -19,8 +19,14 @@ public class ClientRegistration {
         if (!event.getMap().getBasePath().equals("textures")) {
             return;
         }
-        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/pile_of_ingots"));
-        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/pile_of_bricks"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/default_ingot"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/alt_default_ingot"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/default_brick"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/alt_default_brick"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/gold_ingot"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/iron_ingot"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/alt_gold_ingot"));
+        event.addSprite(new ResourceLocation(PilesOfIngots.MODID, "block/alt_iron_ingot"));
     }
 
     @SubscribeEvent
